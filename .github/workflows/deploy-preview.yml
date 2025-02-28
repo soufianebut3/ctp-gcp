@@ -23,13 +23,6 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Debug - List files
-      run: |
-        pwd
-        ls -la
-        echo "Current directory contents:"
-        find . -type f
-
     - name: Copy files to GCS bucket
       run: |
         gsutil cp ./Dockerfile gs://bucket-gcp-ctp/
@@ -38,8 +31,9 @@ jobs:
 
     - name: Build from GCS bucket
       run: |
-        gcloud builds submit gs://bucket-gcp-ctp \
-          --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app
+        gcloud builds submit \
+          --source=gs://bucket-gcp-ctp \
+          --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app
 
     - name: Deploy to Cloud Run
       run: |
