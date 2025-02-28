@@ -1,3 +1,4 @@
+
 name: CI/CD Pipeline
 
 on:
@@ -25,18 +26,19 @@ jobs:
 
     - name: Copy files to GCS bucket
       run: |
-        # Copier le Dockerfile vers le bucket
         gsutil cp Dockerfile gs://bucket-gcp-ctp/
-        # Copier tout le contenu du répertoire
-        gsutil -m cp -r . gs://bucket-gcp-ctp/source/
+        gsutil cp main.py gs://bucket-gcp-ctp/
+        gsutil cp requirements.txt gs://bucket-gcp-ctp/
 
     - name: Build from GCS bucket
       run: |
-        gcloud builds submit gs://bucket-gcp-ctp --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/my-app
+        gcloud builds submit gs://bucket-gcp-ctp \
+          --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy my-app \
-          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/my-app \
+        gcloud run deploy flask-app \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app \
           --region europe-west1 \
-          --platform managed
+          --platform managed \
+          --allow-unauthenticated
