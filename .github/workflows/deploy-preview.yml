@@ -23,17 +23,10 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Copy files to GCS bucket
+    # Build directement depuis le répertoire local
+    - name: Build and push Docker image
       run: |
-        gsutil cp ./Dockerfile gs://bucket-gcp-ctp/
-        gsutil cp ./main.py gs://bucket-gcp-ctp/
-        gsutil cp ./requirements.txt gs://bucket-gcp-ctp/
-
-    - name: Build from GCS bucket
-      run: |
-        gcloud builds submit \
-          --source=gs://bucket-gcp-ctp \
-          --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app
+        gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app .
 
     - name: Deploy to Cloud Run
       run: |
