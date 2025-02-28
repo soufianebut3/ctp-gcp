@@ -1,0 +1,66 @@
+name: Deploy with Terraform and GCP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose action: deploy or destroy"
+        required: true
+        default: "deploy"
+        type: choice
+        options:
+          - deploy
+          - destroy
+
+env:
+  BUCKET: local-notes-tpterraform-bucket-12345
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+
+      # Authentification avec Google Cloud
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      # Installation du CLI gcloud
+      - name: Install the gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure gcloud project
+        run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Build and Push Docker Image to GCP
+        if: github.event.inputs.action == 'deploy' || github.event_name == 'push'
+        run: |
+          gcloud builds submit . --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app --project=${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: github.event.inputs.action == 'deploy' || github.event_name == 'push'
+        run: terraform apply -auto-approve
+
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch'
+        run: terraform destroy -auto-approve
