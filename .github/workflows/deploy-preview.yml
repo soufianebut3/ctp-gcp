@@ -23,10 +23,20 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Build and push Docker image
+    - name: Copy files to GCS bucket
       run: |
-        gcloud builds submit application --tag gcr.io/zippy-pad-442508-s9/python-app
+        # Copier le Dockerfile vers le bucket
+        gsutil cp Dockerfile gs://bucket-gcp-ctp/
+        # Copier tout le contenu du répertoire
+        gsutil -m cp -r . gs://bucket-gcp-ctp/source/
+
+    - name: Build from GCS bucket
+      run: |
+        gcloud builds submit gs://bucket-gcp-ctp --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/my-app
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy application --tag gcr.io/zippy-pad-442508-s9/python-app --region europe-west1 --platform managed
+        gcloud run deploy my-app \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/my-app \
+          --region europe-west1 \
+          --platform managed
