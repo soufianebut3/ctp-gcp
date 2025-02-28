@@ -27,7 +27,7 @@ jobs:
       run: |
         gcloud builds submit application --tag gcr.io/zippy-pad-442508-s9/flask-app
         gcloud run deploy flask-app \
-          --image="gcloud builds submit application --tag gcr.io/zippy-pad-442508-s9/flask-app" \
-          --region=europe-west1 \
-          --platform=managed \
+          --image gcr.io/zippy-pad-442508-s9/flask-app \
+          --region europe-west1 \
+          --platform managed \
           --allow-unauthenticated
