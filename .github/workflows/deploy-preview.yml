@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,16 +23,9 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Authentifier Docker avec Google Cloud
+    - name: Build and Deploy
       run: |
-        gcloud auth configure-docker gcr.io --quiet
-
-    - name: Build and push Docker image
-      run: |
-        gcloud builds submit . --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app
-
-    - name: Deploy to Cloud Run
-      run: |
+        gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app
         gcloud run deploy flask-app \
           --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/flask-app \
           --region europe-west1 \
